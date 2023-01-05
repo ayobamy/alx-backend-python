@@ -6,7 +6,7 @@ function annotations
 
 def floor(n: float) -> int:
     """
-    a type-annotated function floor 
+    a type-annotated function floor
     that floors the given number
     """
-    return int(round(n))
+    return round(n)
