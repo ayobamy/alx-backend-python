@@ -9,7 +9,8 @@ from utils import access_nested_map
 
 class TestAccessNestedMap(unittest.TestCase):
     """
-    Implement the TestAccessNestedMap.test_access_nested_map method to test that the method returns what it is
+    Implement the TestAccessNestedMap.test_access_nested_map
+    method to test that the method returns what it is
     supposed to
     """
     @parameterized.expand([
