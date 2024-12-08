@@ -53,10 +53,11 @@ def batch_processing(batch_size: int) -> None:
         batch_size(int): No of users to process in each batch
     """
     for batch in stream_users_in_batches(batch_size):
-        processed_users = [
-            user for user in batch 
-            if user['age'] > 25
-        ]
+        # processed_users = [
+        #     user for user in batch 
+        #     if user['age'] > 25
+        # ]
         
-        for user in processed_users:
-            print(user)
+        for user in batch:
+            if user['age'] > 25:
+                yield user
