@@ -10,4 +10,7 @@
 - create a decorator that manages db txns by automatically committing or rolling back changes
 
 ## Task 3
-- 
+- create a decorator that retries db operations if they fail due to transient errors
+
+## Task 4
+- create a decorator that caches the results of a db queries inorder to avoid redundant calls
