@@ -1,27 +1,26 @@
 import sqlite3
 import functools
-import logging
 from datetime import datetime
 
-def log_queries():
-    def decorator(func):
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            logging.basicConfig(
-                level=logging.INFO,
-                format='%(asctime)s - %(levelname)s - %(message)s',
-                filename='database_queries.log'
-            )
-            query = kwargs.get('query', args[0] if args else None)
-            if query:
-                logging.info(f"Function: {func.__name__}")
-                logging.info(f"Query: {query}")
-                logging.info(f"Timestamp: {datetime.now()}")
-            return func(*args, **kwargs)
-        return wrapper
-    return decorator
+def log_queries(func):
+    """
+    Logs SQL queries before execution
+    """
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):   
+        query = None
+        if args and isinstance(args[0], str):
+            query = args[0]
+        elif 'query' in kwargs:
+            query = kwargs['query']
+            
+        if query:
+            print(f"\nFunction: {func.__name__}\nQuery: {query}\nTimestamp: {datetime.now()}\n{'='*50}")
+        
+        return func(*args, **kwargs)
+    return wrapper
 
-@log_queries()
+@log_queries
 def fetch_all_users(query):
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
@@ -30,4 +29,5 @@ def fetch_all_users(query):
     conn.close()
     return results
 
+#### fetch users while logging the query
 users = fetch_all_users(query="SELECT * FROM users")
