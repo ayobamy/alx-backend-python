@@ -7,4 +7,7 @@
 - create a decorator that automatically handles opening and closing db connections
 
 ## Task 2
+- create a decorator that manages db txns by automatically committing or rolling back changes
+
+## Task 3
 - 
