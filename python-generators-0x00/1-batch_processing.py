@@ -5,7 +5,7 @@ from typing import Dict, List, Generator
 
 import seed
 
-def stream_users_in_batches(batch_size: int) -> Generator[List[Dict], None, None]:
+def stream_users_in_batches(batch_size: int):
     """
     Generator func to fetch users from the db
     
@@ -45,7 +45,7 @@ def stream_users_in_batches(batch_size: int) -> Generator[List[Dict], None, None
         if 'connection' in locals():
             connection.close()
 
-def batch_processing(batch_size: int) -> None:
+def batch_processing(batch_size: int):
     """
     Process users in batches
     
