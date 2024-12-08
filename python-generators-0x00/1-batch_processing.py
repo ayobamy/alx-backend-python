@@ -1,7 +1,6 @@
 #!/usr/bin/python3
 
 import mysql.connector
-from typing import Dict, List, Generator
 
 import seed
 
@@ -12,7 +11,7 @@ def stream_users_in_batches(batch_size: int):
     Args:
         batch_size(int): No of users in each batch
     
-    Return(Yields):
+    Yields:
         List[Dict]: A batch of user dictionaries
     """
     try:
@@ -52,12 +51,7 @@ def batch_processing(batch_size: int):
     Args:
         batch_size(int): No of users to process in each batch
     """
-    for batch in stream_users_in_batches(batch_size):
-        # processed_users = [
-        #     user for user in batch 
-        #     if user['age'] > 25
-        # ]
-        
+    for batch in stream_users_in_batches(batch_size):  
         for user in batch:
             if user['age'] > 25:
                 yield user
