@@ -1,6 +1,6 @@
 import sqlite3
 
-class ReusableQuery:
+class ExecuteQuery:
     """
     A CM for executing database queries with params
     """
@@ -38,7 +38,7 @@ class ReusableQuery:
 
 # test
 def main():
-    with ReusableQuery(query="SELECT * FROM users WHERE age > ?", params=(25,)) as results:
+    with ExecuteQuery(query="SELECT * FROM users WHERE age > ?", params=(25,)) as results:
         if results:
             for row in results:
                 print(row)
