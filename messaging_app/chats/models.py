@@ -3,7 +3,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 
 
-class user(AbstractUser):
+class User(AbstractUser):
     """
     User model
     """
@@ -48,7 +48,7 @@ class user(AbstractUser):
         verbose_name_plural = 'Users'
         ordering = ['-date_joined']
 
-class conversation(models.Model):
+class Conversation(models.Model):
     """
     Conversation model
     """
@@ -80,7 +80,7 @@ class conversation(models.Model):
         verbose_name_plural = 'Conversations'
         ordering = ['-created_at']
 
-class message(models.Model):
+class Message(models.Model):
     """
     Msg model
     """
