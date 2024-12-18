@@ -7,18 +7,17 @@ class User(AbstractUser):
     """
     User model
     """
-    
-    class Role(models.TextChoices):
-        GUEST = 'guest', 'Guest User'
-        HOST = 'host', 'Host User'
-        ADMIN = 'admin', 'Admin User'
-    
-    id = models.UUIDField(
+    user_id = models.UUIDField(
         primary_key=True, 
         default=uuid.uuid4, 
         editable=False, 
         unique=True,
         db_index=True
+    )
+
+    password = models.CharField(
+        max_length=128,
+        help_text="User's hashed password"
     )
     
     phone_number = models.CharField(
@@ -27,6 +26,11 @@ class User(AbstractUser):
         null=True
     )
     
+    class Role(models.TextChoices):
+        GUEST = 'guest', 'Guest User'
+        HOST = 'host', 'Host User'
+        ADMIN = 'admin', 'Admin User'
+  
     role = models.CharField(
         max_length=10, 
         choices=Role.choices, 
@@ -52,7 +56,7 @@ class Conversation(models.Model):
     """
     Conversation model
     """
-    id = models.UUIDField(
+    conversation_id  = models.UUIDField(
         primary_key=True, 
         default=uuid.uuid4, 
         editable=False,
@@ -74,7 +78,7 @@ class Conversation(models.Model):
         participant_names = ", ".join([
             user.first_name for user in self.participants.all()
         ])
-        return f"Conversation between {participant_names}"
+        return f"Conversation {self.conversation_id}"
     
     class Meta:
         verbose_name_plural = 'Conversations'
@@ -84,7 +88,7 @@ class Message(models.Model):
     """
     Msg model
     """
-    id = models.UUIDField(
+    message_id  = models.UUIDField(
         primary_key=True, 
         default=uuid.uuid4, 
         editable=False,
@@ -114,7 +118,7 @@ class Message(models.Model):
     )
     
     def __str__(self):
-        return f"Message from {self.sender.first_name}: {self.message_body[:30]}..."
+        return f"Message {self.message_id} in conversation {self.conversation.conversation_id}"
     
     class Meta:
         verbose_name_plural = 'Messages'
