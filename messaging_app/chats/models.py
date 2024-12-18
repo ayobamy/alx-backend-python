@@ -11,7 +11,7 @@ class User(AbstractUser):
     class Role(models.TextChoices):
         GUEST = 'guest', 'Guest User'
         HOST = 'host', 'Host User'
-        ADMIN = 'admin', 'Administrator'
+        ADMIN = 'admin', 'Admin User'
     
     id = models.UUIDField(
         primary_key=True, 
