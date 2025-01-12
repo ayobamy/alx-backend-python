@@ -185,14 +185,17 @@ def unread_messages(request):
     """
     Get unread messages with optimized queries
     """
-    messages = Message.objects.filter(
-        receiver=request.user,
-        read=False
+    messages = Message.unread.unread_for_user(request.user).only(
+        'id', 
+        'content',
+        'timestamp',
+        'edited',
+        'last_edited_at',
+        'sender__username',
+        'last_edited_by__username'
     ).select_related(
         'sender',
-        'receiver',
-        'last_edited_by',
-        'parent_message'
+        'last_edited_by'
     ).prefetch_related(
         Prefetch('replies', queryset=Message.objects.select_related(
             'sender', 'receiver'

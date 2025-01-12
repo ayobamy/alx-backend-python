@@ -2,6 +2,11 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 
+
+class UnreadManager(models.Manager):
+    def unread_for_user(self, user):
+        return self.filter(receiver=user, read=False)
+
 class Message(models.Model):
     sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
     receiver = models.ForeignKey(User, related_name='received_messages', on_delete=models.CASCADE)
@@ -11,7 +16,9 @@ class Message(models.Model):
     last_edited_by = models.ForeignKey(User, null=True, blank=True, related_name='edited_messages', on_delete=models.SET_NULL)
     last_edited_at = models.DateTimeField(null=True, blank=True)
     parent_message = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE, related_name='replies')
-    read = models.BooleanField(default=False)
+    read = models.BooleanField(default=False)   
+    objects = models.Manager()
+    unread = UnreadManager()
 
     def __str__(self):
         return f"From {self.sender} to {self.receiver} at {self.timestamp}"
