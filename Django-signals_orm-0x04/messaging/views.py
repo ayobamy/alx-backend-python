@@ -6,7 +6,7 @@ from django.core.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.contrib.auth.models import User
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from .models import Message, MessageHistory
 import json
 
@@ -16,7 +16,11 @@ def delete_user(request):
     """
     Delete user account and return success response
     """
-    request.user.delete()
+    user = request.user
+    Message.objects.filter(
+        Q(sender=user) | Q(receiver=user)
+    ).delete()
+    user.delete()
     return JsonResponse({
         'status': 'success',
         'message': 'User account deleted successfully'
@@ -28,12 +32,20 @@ def handle_message(request, message_id):
     """
     Handle message operations (get/edit)
     """
-    message = get_object_or_404(Message, id=message_id)
+    message = get_object_or_404(
+        Message.objects.filter(
+            Q(sender=request.user) | Q(receiver=request.user)
+        ).select_related(
+            'sender',
+            'receiver',
+            'last_edited_by'
+        ).prefetch_related(
+            'replies'
+        ),
+        id=message_id
+    )
     
     if request.method == "GET":
-        if request.user not in [message.sender, message.receiver]:
-            raise PermissionDenied("You don't have permission to view this message")
-            
         return JsonResponse({
             'id': message.id,
             'content': message.content,
@@ -42,7 +54,8 @@ def handle_message(request, message_id):
             'timestamp': message.timestamp.isoformat(),
             'edited': message.edited,
             'last_edited_by': message.last_edited_by.username if message.last_edited_by else None,
-            'last_edited_at': message.last_edited_at.isoformat() if message.last_edited_at else None
+            'last_edited_at': message.last_edited_at.isoformat() if message.last_edited_at else None,
+            'reply_count': message.replies.count()
         })
     
     if request.method == "PUT":
@@ -83,12 +96,18 @@ def message_history(request, message_id):
     """
     Get message edit history
     """
-    message = get_object_or_404(Message, id=message_id)
+    message = get_object_or_404(
+        Message.objects.filter(
+            Q(sender=request.user) | Q(receiver=request.user)
+        ).select_related(
+            'sender',
+            'receiver',
+            'last_edited_by'
+        ),
+        id=message_id
+    )
     
-    if request.user not in [message.sender, message.receiver]:
-        raise PermissionDenied("You don't have permission to view this message history")
-    
-    history = message.history.select_related('edited_by').all()
+    history = message.history.select_related('edited_by').order_by('-edited_at')
     
     return JsonResponse({
         'message': {
@@ -108,12 +127,21 @@ def message_history(request, message_id):
 @login_required
 def get_threaded_conversation(request, message_id):
     """
-    Get threaded conversation
+    Get threaded conversation using recursive query
     """
     def fetch_replies(message):
-        replies = message.replies.prefetch_related(
-            'sender', 'receiver'
-        ).select_related('parent_message', 'sender', 'receiver')
+        replies = Message.objects.filter(
+            parent_message=message
+        ).select_related(
+            'sender',
+            'receiver',
+            'parent_message',
+            'last_edited_by'
+        ).prefetch_related(
+            Prefetch('replies', queryset=Message.objects.select_related(
+                'sender', 'receiver', 'last_edited_by'
+            ))
+        )
         
         return [{
             'id': reply.id,
@@ -128,12 +156,16 @@ def get_threaded_conversation(request, message_id):
         } for reply in replies]
 
     root_message = get_object_or_404(
-        Message.objects.select_related('sender', 'receiver', 'parent_message'),
+        Message.objects.filter(
+            Q(sender=request.user) | Q(receiver=request.user)
+        ).select_related(
+            'sender',
+            'receiver',
+            'parent_message',
+            'last_edited_by'
+        ),
         id=message_id
     )
-    
-    if request.user not in [root_message.sender, root_message.receiver]:
-        raise PermissionDenied("You don't have permission to view this conversation")
     
     return JsonResponse({
         'id': root_message.id,
@@ -151,9 +183,21 @@ def get_threaded_conversation(request, message_id):
 @login_required
 def unread_messages(request):
     """
-    Get unread messages
+    Get unread messages with optimized queries
     """
-    messages = Message.objects.get_unread_messages(request.user)
+    messages = Message.objects.filter(
+        receiver=request.user,
+        read=False
+    ).select_related(
+        'sender',
+        'receiver',
+        'last_edited_by',
+        'parent_message'
+    ).prefetch_related(
+        Prefetch('replies', queryset=Message.objects.select_related(
+            'sender', 'receiver'
+        ))
+    )
     
     return JsonResponse({
         'unread_messages': [{
@@ -163,6 +207,7 @@ def unread_messages(request):
             'timestamp': msg.timestamp.isoformat(),
             'edited': msg.edited,
             'last_edited_by': msg.last_edited_by.username if msg.last_edited_by else None,
-            'last_edited_at': msg.last_edited_at.isoformat() if msg.last_edited_at else None
+            'last_edited_at': msg.last_edited_at.isoformat() if msg.last_edited_at else None,
+            'reply_count': msg.replies.count()
         } for msg in messages]
     })
