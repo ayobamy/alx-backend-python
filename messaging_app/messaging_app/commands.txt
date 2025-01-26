@@ -1,0 +1,3 @@
+Command to apply:
+
+kubectl apply -f ingress.yaml
